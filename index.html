@@ -132,7 +132,7 @@ ul.clublist li span{display:flex;align-items:center}
 svg.pitch text{font-family:Vollkorn,serif; fill:var(--ink)}
 svg.pitch text.nm{font-size:4.1px; text-anchor:middle}
 svg.pitch text.po{font-size:3.2px; text-anchor:middle; fill:var(--muted)}
-svg.pitch text.cl{font-size:3.1px; text-anchor:middle; fill:var(--muted); font-style:italic}
+svg.pitch text.cl{font-size:2.7px; text-anchor:middle; fill:var(--muted); font-style:italic}
 .xiwrap{max-width:460px}
 footer{margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
   font-size:13px; color:var(--muted)}
@@ -541,7 +541,7 @@ function scorerBlock(comp){
       <td class="club">${fl(r.co)}${esc(r.club)}</td><td class="num">${r.goals}</td></tr>`).join("")}</table></div>` }
 const champBlock=n=>`<div class="champ"><p class="lbl">${T("champion")}</p><p class="who">${esc(n)}</p></div>`;
 
-const SPOT=[[50,137],[84,112],[66,117],[34,117],[16,112],[50,93],[28,79],[72,77],[83,44],[50,31],[17,44]];
+const SPOT=[[50,137],[87,105],[67,119],[33,119],[13,105],[50,93],[27,79],[73,77],[85,45],[50,30],[15,45]];
 function pitchBody(sq,showClub,key){
   return sq.map((pl,i)=>{const [x,y]=SPOT[i]; const k=pl.clubKey||key; return `
     ${dot(x,y-6.6,k)}
