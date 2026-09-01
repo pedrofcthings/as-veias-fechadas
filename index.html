@@ -31,6 +31,10 @@ input[type=number]{font-family:Vollkorn,serif; font-size:17px; width:104px; padd
   border:1px solid var(--rule); background:var(--panel); color:var(--ink); border-radius:0;
   font-variant-numeric:tabular-nums}
 input:focus-visible,button:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+.actionbar{display:flex; align-items:center; gap:16px; margin:16px 0 4px; flex-wrap:wrap}
+#next{font-size:19px; padding:12px 30px; box-shadow:3px 3px 0 var(--rule); letter-spacing:.2px}
+#next:not(:disabled):hover{transform:translate(1px,1px); box-shadow:2px 2px 0 var(--rule)}
+.progline{font-size:13.5px; color:var(--muted); font-style:italic}
 button{font-family:Vollkorn,serif; font-size:16px; padding:7px 17px; cursor:pointer;
   border:1px solid var(--ink); background:var(--ink); color:var(--panel); border-radius:0}
 button.ghost{background:transparent; color:var(--ink)}
@@ -136,6 +140,43 @@ svg.pitch text.cl{font-size:2.7px; text-anchor:middle; fill:var(--muted); font-s
 .xiwrap{max-width:460px}
 footer{margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
   font-size:13px; color:var(--muted)}
+
+/* ---------- mobile ---------- */
+@media(max-width:640px){
+  .wrap{padding:18px 13px 90px}
+  h1{font-size:25px} .sub{font-size:13.5px}
+  .controls{gap:10px 12px; padding:11px 0 12px}
+  .controls>div{flex:1 1 128px}
+  input[type=number],select{width:100%; font-size:16px}
+  .controls button.ghost{flex:1 1 auto; font-size:14px; padding:6px 10px}
+  .actionbar{position:sticky; bottom:0; z-index:5; margin:12px -13px 0; padding:10px 13px;
+    background:var(--paper); border-top:1px solid var(--rule); gap:8px}
+  #next{width:100%; font-size:17px; padding:13px 12px; box-shadow:none}
+  .progline{width:100%; text-align:center; font-size:12.5px}
+  .prog{display:none}
+  .tabs{overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{font-size:16px; padding:5px 13px 6px; white-space:nowrap}
+  .subtabs,.natrow{overflow-x:auto; flex-wrap:nowrap; scrollbar-width:none; padding-bottom:8px}
+  .subtabs::-webkit-scrollbar,.natrow::-webkit-scrollbar{display:none}
+  .subtabs button,.natrow button{white-space:nowrap; flex:0 0 auto}
+  .block h3{font-size:16px}
+  .leg{grid-template-columns:1fr 44px 1fr; gap:5px; font-size:13.5px}
+  .agg{grid-template-columns:1fr 44px 1fr; gap:5px; font-size:14px}
+  .gl{grid-template-columns:1fr 44px 1fr; gap:5px; font-size:11px}
+  .fl{width:13px; height:9px; margin:0 3px}
+  table{font-size:13px} th{font-size:12px}
+  .groups{grid-template-columns:1fr; gap:16px}
+  .sqgrid{grid-template-columns:1fr; gap:14px}
+  ul.clublist{max-height:190px; overflow-y:auto; border:1px solid var(--hair)}
+  ul.clublist li{font-size:14px; padding:6px 8px}
+  svg.pitch,.xiwrap{max-width:100%}
+  .king{gap:6px 10px; padding:11px 13px} .king .ttl{font-size:17px} .king .who{font-size:16px}
+  .champ .who{font-size:24px}
+  .ltab{max-width:100%}
+  footer{font-size:12px}
+}
+@media(max-width:640px) and (display-mode:browser){ body{-webkit-text-size-adjust:100%} }
 @media(prefers-reduced-motion:no-preference){
   .pane.on .block{animation:rise .26s ease-out}
   @keyframes rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}}
@@ -158,6 +199,7 @@ footer{margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
   <div><label for="lang" id="lb-lang">Idioma</label>
     <select id="lang"><option value="pt">Português</option><option value="es">Español</option></select></div>
 </div>
+<div class="actionbar"><button id="next"></button><span class="progline" id="progline"></span></div>
 <ul class="prog" id="prog"></ul>
 
 <nav class="tabs" role="tablist">
@@ -432,29 +474,27 @@ function xiBlock(title,sq,sub,aria,key){
 
 /* ---------- state ---------- */
 const S={}; let step=0, log=[], MODE="modern";
+const KO=()=>[["rR16","sud"],["rR16","lib"],["rQF","sud"],["rQF","lib"],
+  ["rSF","sud"],["rSF","lib"],["rFinal","sud"],["rFinal","lib"]];
+const koLbl=(k,c)=>[(c==="sud"?"Sudamericana":"Libertadores")+" — "+T(k).toLowerCase(),
+  T("bPlay")+" "+T(k).toLowerCase()+" — "+(c==="sud"?"Sudamericana":"Libertadores")];
 const SEQ=()=>({
  modern:[[T("rDraw"),T("bDraw")],
-   ["Libertadores — "+T("rP1"),T("bPlay")+" "+T("rP1")],
-   ["Libertadores — "+T("rP2"),T("bPlay")+" "+T("rP2")],
-   ["Libertadores — "+T("rP3"),T("bPlay")+" "+T("rP3")],
-   ["Sudamericana — "+T("rP1"),T("bPlay")+" "+T("rP1")],
-   ["Libertadores — "+T("rGroups"),T("bPlay")+" "+T("rGroups")],
-   ["Sudamericana — "+T("rGroups"),T("bPlay")+" "+T("rGroups")],
-   ["Sudamericana — "+T("rPO"),T("bPlay")+" "+T("rPO")],
-   [T("rR16"),T("bPlay")+" "+T("rR16").toLowerCase()],
-   [T("rQF"),T("bPlay")+" "+T("rQF").toLowerCase()],
-   [T("rSF"),T("bPlay")+" "+T("rSF").toLowerCase()],
-   [T("rFinals"),T("bPlay")+" "+T("rFinals").toLowerCase()]],
+   ["Libertadores — "+T("rP1"),T("bPlay")+" "+T("rP1")+" — Libertadores"],
+   ["Libertadores — "+T("rP2"),T("bPlay")+" "+T("rP2")+" — Libertadores"],
+   ["Libertadores — "+T("rP3"),T("bPlay")+" "+T("rP3")+" — Libertadores"],
+   ["Sudamericana — "+T("rP1"),T("bPlay")+" "+T("rP1")+" — Sudamericana"],
+   ["Libertadores — "+T("rGroups"),T("bPlay")+" "+T("rGroups")+" — Libertadores"],
+   ["Sudamericana — "+T("rGroups"),T("bPlay")+" "+T("rGroups")+" — Sudamericana"],
+   ["Sudamericana — "+T("rPO"),T("bPlay")+" "+T("rPO")+" — Sudamericana"]
+   ].concat(KO().map(x=>koLbl(x[0],x[1]))),
  old:[[T("rDraw"),T("bDraw")],
-   ["Libertadores — "+T("rP1"),T("bPlay")+" "+T("rP1")],
-   ["Sudamericana — "+T("rP1"),T("bPlay")+" "+T("rP1")],
-   ["Libertadores — "+T("rP2"),T("bPlay")+" "+T("rP2")],
-   ["Sudamericana — "+T("rGroups"),T("bPlay")+" "+T("rGroups")],
-   ["Sudamericana — "+T("rPO"),T("bPlay")+" "+T("rPO")],
-   [T("rR16"),T("bPlay")+" "+T("rR16").toLowerCase()],
-   [T("rQF"),T("bPlay")+" "+T("rQF").toLowerCase()],
-   [T("rSF"),T("bPlay")+" "+T("rSF").toLowerCase()],
-   [T("rFinals"),T("bPlay")+" "+T("rFinals").toLowerCase()]]});
+   ["Libertadores — "+T("rP1"),T("bPlay")+" "+T("rP1")+" — Libertadores"],
+   ["Sudamericana — "+T("rP1"),T("bPlay")+" "+T("rP1")+" — Sudamericana"],
+   ["Libertadores — "+T("rP2"),T("bPlay")+" "+T("rP2")+" — Libertadores"],
+   ["Sudamericana — "+T("rGroups"),T("bPlay")+" "+T("rGroups")+" — Sudamericana"],
+   ["Sudamericana — "+T("rPO"),T("bPlay")+" "+T("rPO")+" — Sudamericana"]
+   ].concat(KO().map(x=>koLbl(x[0],x[1])))});
 const R=()=>SEQ()[MODE].map(x=>x[0]), BTN=()=>SEQ()[MODE].map(x=>x[1]);
 
 function buildClubs(){
@@ -613,6 +653,7 @@ function compPane(comp){
 }
 function render(){
   const rr=R();
+  el("progline").textContent=step>=rr.length?"":(step+1)+"/"+rr.length+" · "+rr[step];
   el("prog").innerHTML=rr.map((r,i)=>
     `<li class="${i<step?'done':i===step?'now':''}"><b>${i+1}</b><span>${r}</span></li>`).join("");
   ["sq","tab","lib","sud"].forEach(k=>{
@@ -660,10 +701,7 @@ function modernStep(i,L,D){
   case 5: libGroups(L,S.libDirect.concat(L.p3.map(t=>t.winner))); break;
   case 6: sudGroups(D,L.drop,["Brazil","Argentina"]); break;
   case 7: sudPlayoff(L,D); break;
-  case 8: knock("r16",T("rR16")); break;
-  case 9: knock("qf",T("rQF")); break;
-  case 10: knock("sf",T("rSF")); break;
-  case 11: finals(L,D); break; }
+  default: koStep(i-8); }
 }
 function oldStep(i,L,D){
   switch(i){
@@ -676,10 +714,7 @@ function oldStep(i,L,D){
   case 3: libGroups(L,S.libDirect.concat(L.p1.map(t=>t.winner)),T("rP2G")); break;
   case 4: sudGroups(D,L.drop,["Brazil","Argentina","Mexico"]); break;
   case 5: sudPlayoff(L,D); break;
-  case 6: knock("r16",T("rR16")); break;
-  case 7: knock("qf",T("rQF")); break;
-  case 8: knock("sf",T("rSF")); break;
-  case 9: finals(L,D); break; }
+  default: koStep(i-6); }
 }
 function sudFirst(D){
   const direct=MODE==="old"?["Brazil","Argentina","Mexico"]:["Brazil","Argentina"];
@@ -711,42 +746,36 @@ function sudPlayoff(L,D){
   add("sud",T("rPO").charAt(0).toUpperCase()+T("rPO").slice(1),tiesBlock(T("poTitle"),D.po));
   S.view="sud"; log.push("SUDAMERICANA — PLAYOFF\n"+D.po.map(line).join("\n"));
 }
-function knock(key,title){
-  const prev={qf:"r16",sf:"qf"}[key];
-  S.L[key]=key==="r16"?bracket16(S.L.win,S.L.sec,"lib"):nextRound(S.L[prev],"lib");
-  S.D[key]=key==="r16"?bracket16(S.D.win,S.D.sec,"sud"):nextRound(S.D[prev],"sud");
-  add("lib",title,tiesBlock(title,S.L[key])); add("sud",title,tiesBlock(title,S.D[key]));
-  S.view="lib";
-  log.push(title.toUpperCase()+"\nLib: "+S.L[key].map(line).join(" | ")+"\nSud: "+S.D[key].map(line).join(" | "));
+const KEYS={rR16:"r16",rQF:"qf",rSF:"sf"};
+function koStep(n){
+  const [rk,comp]=KO()[n], St=comp==="lib"?S.L:S.D, other=comp==="lib"?"Lib":"Sud";
+  if(rk==="rFinal") return finalOne(comp,St);
+  const key=KEYS[rk], prev={qf:"r16",sf:"qf"}[key];
+  St[key]=key==="r16"?bracket16(St.win,St.sec,comp):nextRound(St[prev],comp);
+  add(comp,T(rk),tiesBlock(T(rk),St[key]));
+  S.view=comp;
+  log.push((comp==="lib"?"LIBERTADORES":"SUDAMERICANA")+" — "+T(rk).toUpperCase()+"\n"
+    +St[key].map(line).join("\n"));
 }
-function finals(L,D){
-  const lf=(MODE==="modern"?oneOff:tie)(L.sf[0].winner,L.sf[1].winner,"lib");
-  const df=(MODE==="modern"?oneOff:tie)(D.sf[0].winner,D.sf[1].winner,"sud");
-  add("lib",T("rFinal"),tiesBlock(T("rFinal"),[lf])+champBlock(lf.winner.name)
-    +xiBlock(T("champXI"),lf.winner.squad.map(p=>({...p,cs:(CLEAN.lib[lf.winner.key]||{}).cs||0,
-      g:(Object.values(TALLY.lib).find(r=>r.n===p.n&&r.club===lf.winner.name)||{}).goals||0})),
-      esc(lf.winner.name)+" · "+CO(lf.winner.co),T("champXI"),lf.winner.key));
-  add("sud",T("rFinal"),tiesBlock(T("rFinal"),[df])+champBlock(df.winner.name)
-    +xiBlock(T("champXI"),df.winner.squad.map(p=>({...p,cs:(CLEAN.sud[df.winner.key]||{}).cs||0,
-      g:(Object.values(TALLY.sud).find(r=>r.n===p.n&&r.club===df.winner.name)||{}).goals||0})),
-      esc(df.winner.name)+" · "+CO(df.winner.co),T("champXI"),df.winner.key));
-  const lq=L.qf.flatMap(t=>[t.a,t.b]), dq=D.qf.flatMap(t=>[t.a,t.b]);
-  const runs=(sf,fin,champ)=>{const m={};
-    sf.flatMap(t=>[t.a,t.b]).forEach(c=>m[c.key]=2);
-    [fin.a,fin.b].forEach(c=>m[c.key]=4); m[champ.key]=8; return m};
-  add("lib",T("selTab"),award("lib",lq,runs(L.sf,lf,lf.winner),T("king"))
-    +xiBlock(T("bestXI"),bestXI("lib",lq,"x").squad,
-    T("selNote"),T("bestXI")+" — Libertadores"));
-  add("sud",T("selTab"),award("sud",dq,runs(D.sf,df,df.winner),T("prince"))
-    +xiBlock(T("bestXI"),bestXI("sud",dq,"x").squad,
-    T("selNote"),T("bestXI")+" — Sudamericana"));
-  S.tab.lib=S.blocks.lib.length-2; S.view="lib";
-  log.push("FINAIS\nLibertadores: "+lf.winner.name+"\nSudamericana: "+df.winner.name);
+function finalOne(comp,St){
+  const f=(MODE==="modern"?oneOff:tie)(St.sf[0].winner,St.sf[1].winner,comp);
+  const tal=TALLY[comp], cl=CLEAN[comp];
+  add(comp,T("rFinal"),tiesBlock(T("rFinal"),[f])+champBlock(f.winner.name)
+    +xiBlock(T("champXI"),f.winner.squad.map(p=>({...p,cs:(cl[f.winner.key]||{}).cs||0,
+      g:(Object.values(tal).find(r=>r.n===p.n&&r.club===f.winner.name)||{}).goals||0})),
+      esc(f.winner.name)+" · "+CO(f.winner.co),T("champXI"),f.winner.key));
+  const qf=St.qf.flatMap(t=>[t.a,t.b]);
+  const runs={}; St.sf.flatMap(t=>[t.a,t.b]).forEach(c=>runs[c.key]=2);
+  [f.a,f.b].forEach(c=>runs[c.key]=4); runs[f.winner.key]=8;
+  add(comp,T("selTab"),award(comp,qf,runs,T(comp==="lib"?"king":"prince"))
+    +xiBlock(T("bestXI"),bestXI(comp,qf,"x").squad,T("selNote"),
+      T("bestXI")+" — "+(comp==="lib"?"Libertadores":"Sudamericana")));
+  S.tab[comp]=S.blocks[comp].length-2; S.view=comp;
+  log.push((comp==="lib"?"LIBERTADORES":"SUDAMERICANA")+" — "+T("rFinal").toUpperCase()+": "+f.winner.name);
 }
-
 el("next").onclick=advance;
 el("all").onclick=()=>{while(step<R().length) advance(); S.view="lib"; render()};
-el("reset").onclick=reset;
+el("reset").onclick=()=>{el("seed").value=String(1+Math.floor(Math.random()*999999)); reset()};
 el("seed").onchange=reset;
 el("mode").onchange=reset;
 el("lang").onchange=()=>{
