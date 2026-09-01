@@ -266,6 +266,16 @@ const SHORT={"Goalkeepers":"GK","Right-Backs":"RB","Left-Backs":"LB","Defensive 
 const COUNTRIES=Object.keys(W);
 const ptbr=(a,b)=>String(a).localeCompare(String(b),LANG==="es"?"es":"pt-BR");
 const PARTICLE=/^(de|da|do|dos|das|del|van|von|di|la|le)$/i;
+function shortClub(n){
+  let s=n.replace(/\s*\([^)]*\)/,"").trim();
+  if(s.length<=15) return s;
+  const w=s.split(/\s+/);
+  if(w.length>1){ const ab=w[0].length>4?w[0].slice(0,3)+".":w[0];
+    let t=[ab].concat(w.slice(1)).join(" ");
+    if(t.length>15) t=ab+" "+w[w.length-1];
+    return t; }
+  return s;
+}
 function shortName(n){
   const w=n.trim().split(/\s+/);
   if(w.length===1||n.length<=13) return n;
@@ -541,7 +551,7 @@ function scorerBlock(comp){
       <td class="club">${fl(r.co)}${esc(r.club)}</td><td class="num">${r.goals}</td></tr>`).join("")}</table></div>` }
 const champBlock=n=>`<div class="champ"><p class="lbl">${T("champion")}</p><p class="who">${esc(n)}</p></div>`;
 
-const SPOT=[[50,137],[87,105],[67,119],[33,119],[13,105],[50,93],[27,79],[73,77],[85,45],[50,30],[15,45]];
+const SPOT=[[50,137],[88,105],[69,119],[31,119],[12,105],[50,93],[26,79],[74,77],[87,45],[50,30],[13,45]];
 function pitchBody(sq,showClub,key){
   return sq.map((pl,i)=>{const [x,y]=SPOT[i]; const k=pl.clubKey||key; return `
     ${dot(x,y-6.6,k)}
@@ -549,7 +559,7 @@ function pitchBody(sq,showClub,key){
       showClub&&/^(GK|RB|CB|LB)$/.test(pl.pos) ? (pl.cs!=null?" · "+pl.cs+" "+T("cs"):"")
       : (pl.g?" · "+pl.g+T("gl"):"")}</text>
     <text class="nm" x="${x}" y="${y}">${esc(shortName(pl.n))}<title>${esc(pl.n)}</title></text>
-    ${showClub&&pl.club?`<text class="cl" x="${x}" y="${y+4.4}">${esc(pl.club)}</text>`:""}`}).join("");
+    ${showClub&&pl.club?`<text class="cl" x="${x}" y="${y+4.4}">${esc(shortClub(pl.club))}<title>${esc(pl.club)}</title></text>`:""}`}).join("");
 }
 function pitchFrame(inner,aria){
   return `<svg class="pitch" viewBox="-11 -3 122 156" role="img" aria-label="${esc(aria)}">
