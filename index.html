@@ -276,6 +276,7 @@ pt:{
  betGo:"Apostar", betSkip:"Jogar sem apostar", betNone:"— escolher —",
  betLabel:"Palpite", betAlive:"na disputa", betOut:"eliminado",
  betWon:"acertou!", betLost:"não foi dessa vez",
+ orderNote:"(clubes em ordem de força do elenco)",
  path:"Caminho do campeão", pathNote:"Como chegou lá",
  domestic:"º melhor elenco do país",
  clickHint:"Clique no nome de um clube para ver o elenco.", reset:"Recomeçar", copy:"Copiar resultados", copied:"Copiado",
@@ -320,6 +321,7 @@ es:{
  betGo:"Apostar", betSkip:"Jugar sin apostar", betNone:"— elegir —",
  betLabel:"Pronóstico", betAlive:"en carrera", betOut:"eliminado",
  betWon:"¡acertaste!", betLost:"no fue esta vez",
+ orderNote:"(clubes en orden de fuerza de la plantilla)",
  path:"El camino del campeón", pathNote:"Cómo llegó hasta ahí",
  domestic:"ª mejor plantilla del país",
  clickHint:"Haz clic en el nombre de un club para ver la plantilla.", reset:"Reiniciar", copy:"Copiar resultados", copied:"Copiado",
@@ -852,7 +854,8 @@ function advance(){
   const L=S.L, D=S.D;
   if(step===0){
     buildClubs(); MODE==="old"?qualifyOld():qualifyModern();
-    log.push("ELENCOS\n"+COUNTRIES.map(co=>CO(co)+": "+byCo(co).map(c=>`${c.name} ${c.total}`).join(", ")).join("\n"));
+    log.push(T("tSq").toUpperCase()+" "+T("orderNote")+"\n"
+      +COUNTRIES.map(co=>CO(co)+": "+byCo(co).map(c=>c.name).join(", ")).join("\n"));
     step++; render(); return;
   }
   if(MODE==="modern") modernStep(step,L,D); else oldStep(step,L,D);
@@ -975,7 +978,20 @@ function finalOne(comp,St){
       T("bestXI")+" — "+(comp==="lib"?"Libertadores":"Sudamericana")));
   St.champ=f.winner;
   S.tab[comp]=S.blocks[comp].length-2; S.view=comp;
-  log.push((comp==="lib"?"LIBERTADORES":"SUDAMERICANA")+" — "+T("rFinal").toUpperCase()+": "+f.winner.name);
+  const cname=comp==="lib"?"LIBERTADORES":"SUDAMERICANA";
+  const xiTxt=sq=>sq.map(p=>p.pos.padEnd(3)+" "+p.n+(p.club?" ("+p.club+")":"")).join("\n");
+  const sel=bestXI(comp,qf,"x").squad;
+  const kg=(()=>{ const g={}; Object.values(TALLY[comp]).forEach(r=>{g[r.n+"|"+r.club]=r.goals});
+    const BK={GK:1,RB:1,CB:1,LB:1}; let b=null;
+    qf.forEach(c=>{ const t=(CLEAN[comp][c.key]||{cs:0}), bo=runs[c.key]||0;
+      c.squad.forEach(p=>{ const gg=g[p.n+"|"+c.name]||0;
+        const s=(BK[p.pos]?p.r+2*t.cs:p.r+2*gg)+bo;
+        if(!b||s>b.s) b={s,n:p.n,c:c.name} }) });
+    return b })();
+  log.push(cname+" — "+T("champion").toUpperCase()+": "+f.winner.name+" ("+CO(f.winner.co)+")"
+    +"\n\n"+T("champXI").toUpperCase()+"\n"+xiTxt(f.winner.squad)
+    +"\n\n"+T(comp==="lib"?"king":"prince").toUpperCase()+": "+kg.n+" ("+kg.c+")"
+    +"\n\n"+T("bestXI").toUpperCase()+"\n"+xiTxt(sel));
 }
 el("next").onclick=advance;
 el("all").onclick=()=>{const s=S.slow; S.slow=false; S.pvOn=false; while(step<R().length) advance(); S.slow=s; S.view="lib"; render()};
