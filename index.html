@@ -24,7 +24,8 @@ h1,h2,h3,h4{font-family:"Sorts Mill Goudy",Georgia,serif; font-weight:400}
 .wrap{max-width:1120px; margin:0 auto; padding:30px 24px 80px}
 header{border-bottom:2px solid var(--ink); padding-bottom:13px}
 h1{font-size:33px; margin:0 0 2px}
-.sub{color:var(--muted); font-size:15px; font-style:italic; margin:0}
+.sub{color:var(--ink); font-size:15.5px; margin:0 0 3px; max-width:64ch}
+.sub2{color:var(--muted); font-size:14px; font-style:italic; margin:0}
 
 .controls{display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap;
   padding:13px 0 14px; border-bottom:1px solid var(--rule)}
@@ -172,7 +173,7 @@ footer{margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
 /* ---------- mobile ---------- */
 @media(max-width:640px){
   .wrap{padding:18px 13px 90px}
-  h1{font-size:25px} .sub{font-size:13.5px}
+  h1{font-size:25px} .sub{font-size:14px} .sub2{font-size:12.5px}
   .controls{gap:10px 12px; padding:11px 0 12px}
   .controls>div{flex:1 1 128px}
   input[type=number],select{width:100%; font-size:16px}
@@ -221,22 +222,23 @@ footer{margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
 <header>
   <h1 id="h-title"></h1>
   <p class="sub" id="h-sub"></p>
+  <p class="sub2" id="h-sub2"></p>
 </header>
 
 <div class="controls">
   <div><label for="seed" id="lb-seed">Seed</label><input type="number" id="seed" value="1960"></div>
-  <button id="next">Sortear os elencos</button>
-  <button id="all" class="ghost"></button>
-  <span class="toggles">
-    <label class="check"><input type="checkbox" id="slow"> <span id="lb-slow"></span></label>
-    <label class="check"><input type="checkbox" id="beton"> <span id="lb-beton"></span></label>
-  </span>
-  <button id="reset" class="ghost"></button>
-  <button id="dump" class="ghost"></button>
   <div><label for="mode" id="lb-mode">Formato</label>
     <select id="mode"><option value="modern"></option><option value="old"></option></select></div>
   <div><label for="lang" id="lb-lang">Idioma</label>
     <select id="lang"><option value="pt">Português</option><option value="es">Español</option></select></div>
+  <span class="toggles">
+    <label class="check"><input type="checkbox" id="slow"> <span id="lb-slow"></span></label>
+    <label class="check"><input type="checkbox" id="beton"> <span id="lb-beton"></span></label>
+  </span>
+  <button id="all" class="ghost"></button>
+  <button id="reset" class="ghost"></button>
+  <button id="link" class="ghost"></button>
+  <button id="dump" class="ghost"></button>
 </div>
 <div class="actionbar"><button id="next"></button><span class="progline" id="progline"></span></div>
 <ul class="prog" id="prog"></ul>
@@ -263,7 +265,8 @@ footer{margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
 const I18N={
 pt:{
  title:"As Veias Fechadas",
- sub:"Uma temporada sul-americana sem a Lei Bosman — 120 clubes, cada jogador no seu país.",
+ sub:"A Lei Bosman, em 1995, abriu as fronteiras do futebol europeu — e o continente começou a sangrar jogadores. Aqui as veias ficaram fechadas.",
+ sub2:"120 clubes, cada craque no seu país. Uma seed gera o continente inteiro.",
  xiOf:"Onze do", seedNote:"Uma seed gera o continente inteiro.",
  foot:"Sorteio ponderado por títulos; motor de resultados Poisson. A mesma seed devolve sempre a mesma temporada.",
  scorersOf:"ARTILHARIA",
@@ -281,7 +284,7 @@ pt:{
  orderNote:"(clubes em ordem de força do elenco)",
  path:"Caminho do campeão", pathNote:"Como chegou lá",
  domestic:"º melhor elenco do país",
- clickHint:"Clique no nome de um clube para ver o elenco.", reset:"Recomeçar", copy:"Copiar resultados", copied:"Copiado",
+ clickHint:"Clique no nome de um clube para ver o elenco.", reset:"Recomeçar", copy:"Copiar resultados", copyLink:"Copiar link da temporada", copied:"Copiado",
  done:"Temporada completa",
  tSq:"Elencos", tTab:"Tabelas",
  emptyDraw:"Sorteie os elencos.", emptyComp:"Ainda não jogado.", emptyGoals:"Ainda sem gols.",
@@ -308,7 +311,8 @@ pt:{
 },
 es:{
  title:"Las Venas Cerradas",
- sub:"Una temporada sudamericana sin la Ley Bosman — 120 clubes, cada jugador en su país.",
+ sub:"La Ley Bosman, en 1995, abrió las fronteras del fútbol europeo — y el continente empezó a sangrar jugadores. Acá las venas quedaron cerradas.",
+ sub2:"120 clubes, cada crack en su país. Una semilla genera el continente entero.",
  xiOf:"Once de", seedNote:"Una semilla genera el continente entero.",
  foot:"Sorteo ponderado por títulos; motor de resultados Poisson. La misma semilla devuelve siempre la misma temporada.",
  scorersOf:"GOLEADORES",
@@ -326,7 +330,7 @@ es:{
  orderNote:"(clubes en orden de fuerza de la plantilla)",
  path:"El camino del campeón", pathNote:"Cómo llegó hasta ahí",
  domestic:"ª mejor plantilla del país",
- clickHint:"Haz clic en el nombre de un club para ver la plantilla.", reset:"Reiniciar", copy:"Copiar resultados", copied:"Copiado",
+ clickHint:"Haz clic en el nombre de un club para ver la plantilla.", reset:"Reiniciar", copy:"Copiar resultados", copyLink:"Copiar enlace de la temporada", copied:"Copiado",
  done:"Temporada completa",
  tSq:"Plantillas", tTab:"Tablas",
  emptyDraw:"Sortea las plantillas.", emptyComp:"Todavía no jugado.", emptyGoals:"Todavía sin goles.",
@@ -799,7 +803,7 @@ function add(comp,label,html){ S.blocks[comp].push({label,html}); S.tab[comp]=S.
 const glog=(t,gs)=>t+"\n"+gs.map((g,i)=>"Grupo "+"ABCDEFGH"[i]+": "+g.map(r=>`${r.c.name} ${r.Pts}`).join(", ")).join("\n");
 
 function reset(){
-  MODE=el("mode").value;
+  MODE=el("mode").value; S.slow=el("slow").checked;
   rnd=mulberry32(parseInt(el("seed").value||1,10)||1);
   step=0; log=[]; TALLY.lib={}; TALLY.sud={}; CLEAN.lib={}; CLEAN.sud={};
   S.bet=null; S.betOn=el("beton").checked; S.pend=null; S.pvOn=false; S.pvHTML=null; S.ALL=null; S.lq=null; S.sq=null; S.holders=null;
@@ -1008,13 +1012,13 @@ el("lang").onchange=()=>{
   S.view=view; S.tab=tabs; S.co=co; S.club=club; render();
 };
 function chrome(){
-  el("h-title").textContent=T("title"); el("h-sub").textContent=T("sub");
+  el("h-title").textContent=T("title"); el("h-sub").textContent=T("sub"); el("h-sub2").textContent=T("sub2");
   el("h-foot").textContent=T("foot");
   el("lb-seed").textContent=T("seed"); el("lb-mode").textContent=T("format");
   el("lb-lang").textContent=T("lang");
   el("mode").options[0].textContent=T("fmodern"); el("mode").options[1].textContent=T("fold");
   el("all").textContent=T("simAll"); el("reset").textContent=T("reset");
-  el("dump").textContent=T("copy");
+  el("dump").textContent=T("copy"); el("link").textContent=T("copyLink");
   el("lb-slow").textContent=T("slow");
   el("lb-beton").textContent=T("betOn");
   el("t-sq").textContent=T("tSq"); el("t-tab").textContent=T("tTab");
@@ -1033,6 +1037,13 @@ el("clublist").onclick=e=>{const li=e.target.closest("li[data-k]"); if(li){S.clu
 ["lib","sud"].forEach(c=>el("s-"+c).onclick=e=>{
   const b=e.target.closest("button[data-i]"); if(!b) return;
   S.tab[c]=b.dataset.i==="art"?"art":+b.dataset.i; render()});
+el("link").onclick=()=>{
+  const q=new URLSearchParams({seed:el("seed").value,mode:MODE,lang:LANG});
+  if(S.slow) q.set("slow","1");
+  const url=location.origin+location.pathname+"?"+q;
+  navigator.clipboard?.writeText(url);
+  el("link").textContent=T("copied"); setTimeout(()=>el("link").textContent=T("copyLink"),1400);
+};
 el("dump").onclick=()=>{
   const top=c=>Object.values(TALLY[c]).sort((a,b)=>b.goals-a.goals).slice(0,10)
     .map(r=>`${r.goals}  ${r.n} (${r.club})`).join("\n");
@@ -1043,7 +1054,14 @@ el("dump").onclick=()=>{
     +"\n\n"+T("scorersOf")+" — SUDAMERICANA\n"+top("sud"));
   el("dump").textContent=T("copied"); setTimeout(()=>el("dump").textContent=T("copy"),1400);
 };
-el("seed").value=String(1+Math.floor(Math.random()*999999));
+(function(){
+  const q=new URLSearchParams(location.search);
+  const sd=parseInt(q.get("seed"),10);
+  el("seed").value=String(sd>0?sd:1+Math.floor(Math.random()*999999));
+  if(q.get("mode")==="old") el("mode").value="old";
+  if(q.get("lang")==="es"){ LANG="es"; el("lang").value="es" }
+  if(q.get("slow")==="1") el("slow").checked=true;
+})();
 chrome();
 reset();
 </script>
