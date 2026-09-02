@@ -31,6 +31,27 @@ input[type=number]{font-family:Vollkorn,serif; font-size:17px; width:104px; padd
   border:1px solid var(--rule); background:var(--panel); color:var(--ink); border-radius:0;
   font-variant-numeric:tabular-nums}
 input:focus-visible,button:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+.betbar:empty{display:none}
+.betbar{margin:14px 0 0; padding:12px 15px; border:1px solid var(--rule); background:var(--panel);
+  display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap; font-size:15px}
+.betbar .ask{font-family:"Sorts Mill Goudy",serif; font-size:17px}
+.betbar select{font-size:15px; padding:4px 7px; max-width:210px; display:block}
+.betbar label.bl{display:flex; flex-direction:column; gap:2px}
+.betbar label.bl span{font-size:12px; color:var(--muted)}
+.betbar button{font-size:14px; padding:5px 13px}
+.betbar .st{font-size:14px; color:var(--muted); font-style:italic}
+.betbar .ok{color:var(--lib); font-style:normal; font-weight:700}
+.betbar .ko{color:var(--sud); font-style:normal}
+.cl-link{cursor:pointer; border-bottom:1px dotted var(--rule)}
+.cl-link:hover{border-bottom-color:var(--ink)}
+.star{color:var(--lib); font-weight:700; margin-right:3px}
+.sp .star{color:var(--sud)}
+.pathbox{margin:10px 0 0; font-size:14.5px}
+.pathbox .r{display:grid; grid-template-columns:120px 1fr auto; gap:10px;
+  border-bottom:1px solid var(--hair); padding:3px 0}
+.pathbox .r b{font-weight:400; color:var(--muted); font-size:13px}
+.pathbox .sc{font-variant-numeric:tabular-nums; font-weight:700}
+.dompos{font-size:13.5px; color:var(--muted); font-style:italic; margin:4px 0 0}
 .actionbar{display:flex; align-items:center; gap:16px; margin:16px 0 4px; flex-wrap:wrap}
 #next{font-size:19px; padding:12px 30px; box-shadow:3px 3px 0 var(--rule); letter-spacing:.2px}
 #next:not(:disabled):hover{transform:translate(1px,1px); box-shadow:2px 2px 0 var(--rule)}
@@ -173,6 +194,11 @@ footer{margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
   svg.pitch,.xiwrap{max-width:100%}
   .king{gap:6px 10px; padding:11px 13px} .king .ttl{font-size:17px} .king .who{font-size:16px}
   .champ .who{font-size:24px}
+  .betbar{font-size:14px; padding:10px 12px; gap:8px 10px}
+  .betbar .ask{font-size:15px; width:100%}
+  .betbar select{max-width:none; flex:1 1 100%; font-size:16px}
+  .betbar button{flex:1 1 auto}
+  .pathbox .r{grid-template-columns:84px 1fr auto; gap:7px; font-size:13px}
   .ltab{max-width:100%}
   footer{font-size:12px}
 }
@@ -192,6 +218,7 @@ footer{margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
   <div><label for="seed" id="lb-seed">Seed</label><input type="number" id="seed" value="1960"></div>
   <button id="next">Sortear os elencos</button>
   <button id="all" class="ghost"></button>
+  <label class="check"><input type="checkbox" id="slow"> <span id="lb-slow"></span></label>
   <button id="reset" class="ghost"></button>
   <button id="dump" class="ghost"></button>
   <div><label for="mode" id="lb-mode">Formato</label>
@@ -209,6 +236,7 @@ footer{margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
   <button id="t-sud" class="sud" role="tab" aria-selected="false">Sudamericana</button>
 </nav>
 
+<div class="betbar" id="betbar"></div>
 <div class="pane on" id="p-sq">
   <div class="natrow" id="natrow"></div>
   <div class="sqgrid"><div id="clublist"></div><div id="pitch"></div></div>
@@ -229,7 +257,18 @@ pt:{
  scorersOf:"ARTILHARIA",
  seed:"Seed", format:"Formato", lang:"Idioma",
  fmodern:"Atual (10 países)", fold:"Antigo (com o México)",
- playAll:"Jogar a temporada", reset:"Recomeçar", copy:"Copiar resultados", copied:"Copiado",
+ playAll:"Jogar a temporada",
+ simAll:"Simular tudo de uma vez",
+ betAsk:"Antes de começar: em quem tu apostas?",
+ betLib:"Campeão da Libertadores", betSud:"Campeão da Sudamericana",
+ slow:"ver confrontos antes", pvTitle:"Confrontos sorteados",
+ bPreview:"Ver confrontos", bSim:"Simular resultados", pvTag:"prévia",
+ betGo:"Apostar", betSkip:"Jogar sem apostar", betNone:"— escolher —",
+ betLabel:"Palpite", betAlive:"na disputa", betOut:"eliminado",
+ betWon:"acertou!", betLost:"não foi dessa vez",
+ path:"Caminho do campeão", pathNote:"Como chegou lá",
+ domestic:"º melhor elenco do país",
+ clickHint:"Clique no nome de um clube para ver o elenco.", reset:"Recomeçar", copy:"Copiar resultados", copied:"Copiado",
  done:"Temporada completa",
  tSq:"Elencos", tTab:"Tabelas",
  emptyDraw:"Sorteie os elencos.", emptyComp:"Ainda não jogado.", emptyGoals:"Ainda sem gols.",
@@ -262,7 +301,18 @@ es:{
  scorersOf:"GOLEADORES",
  seed:"Semilla", format:"Formato", lang:"Idioma",
  fmodern:"Actual (10 países)", fold:"Antiguo (con México)",
- playAll:"Jugar la temporada", reset:"Reiniciar", copy:"Copiar resultados", copied:"Copiado",
+ playAll:"Jugar la temporada",
+ simAll:"Simular todo de una vez",
+ slow:"ver los cruces antes", pvTitle:"Cruces sorteados",
+ bPreview:"Ver los cruces", bSim:"Simular los resultados", pvTag:"previa",
+ betAsk:"Antes de empezar: ¿por quién apuestas?",
+ betLib:"Campeón de la Libertadores", betSud:"Campeón de la Sudamericana",
+ betGo:"Apostar", betSkip:"Jugar sin apostar", betNone:"— elegir —",
+ betLabel:"Pronóstico", betAlive:"en carrera", betOut:"eliminado",
+ betWon:"¡acertaste!", betLost:"no fue esta vez",
+ path:"El camino del campeón", pathNote:"Cómo llegó hasta ahí",
+ domestic:"ª mejor plantilla del país",
+ clickHint:"Haz clic en el nombre de un club para ver la plantilla.", reset:"Reiniciar", copy:"Copiar resultados", copied:"Copiado",
  done:"Temporada completa",
  tSq:"Plantillas", tTab:"Tablas",
  emptyDraw:"Sortea las plantillas.", emptyComp:"Todavía no jugado.", emptyGoals:"Todavía sin goles.",
@@ -404,15 +454,21 @@ function oneOff(a,b,comp){
   if(x!==y) winner=x>y?a:b; else winner=pens=(rnd()<0.5+0.004*(a.r-b.r)?a:b);
   return {a,b,one:true,leg:[x,y],sc:[sa,sb],winner,loser:winner===a?b:a,pens};
 }
-function bracket(cl,comp){ const s=cl.slice().sort((x,y)=>y.total-x.total),n=s.length,o=[];
-  for(let i=0;i<n/2;i++) o.push(tie(s[i],s[n-1-i],comp)); return o }
+function rec(comp,label,ties){ const St=comp==="lib"?S.L:S.D;
+  (St.hist=St.hist||[]).push({label,ties}); betCheck(comp,label,ties); }
+function pairSeed(cl){ const s=cl.slice().sort((x,y)=>y.total-x.total),n=s.length,o=[];
+  for(let i=0;i<n/2;i++) o.push([s[i],s[n-1-i]]); return o }
+function pairNat(cl){ const s=shuffle(cl),o=[];
+  for(let i=0;i<s.length;i+=2) o.push([s[i],s[i+1]]); return o }
+function playPairs(p,comp){ return p.map(x=>tie(x[0],x[1],comp)) }
+function bracket(cl,comp){ return playPairs(pairSeed(cl),comp) }
 /* round of 16: 1A-2B, 1C-2D, 1E-2F, 1G-2H | 1B-2A, 1D-2C, 1F-2E, 1H-2G */
 const R16PAIR=[[0,1],[2,3],[4,5],[6,7],[1,0],[3,2],[5,4],[7,6]];
-function bracket16(win,sec,comp){ return R16PAIR.map(([w,s])=>tie(win[w],sec[s],comp)) }
-function nextRound(prev,comp){ const o=[];
-  for(let i=0;i<prev.length;i+=2) o.push(tie(prev[i].winner,prev[i+1].winner,comp)); return o }
-function pairAll(cl,comp){ const s=shuffle(cl),o=[];
-  for(let i=0;i<s.length;i+=2) o.push(tie(s[i],s[i+1],comp)); return o }
+const pair16=(w,s)=>R16PAIR.map(x=>[w[x[0]],s[x[1]]]);
+const pairNext=p=>{const o=[];for(let i=0;i<p.length;i+=2)o.push([p[i].winner,p[i+1].winner]);return o};
+function bracket16(win,sec,comp){ return playPairs(pair16(win,sec),comp) }
+function nextRound(prev,comp){ return playPairs(pairNext(prev),comp) }
+
 function playGroup(g,comp){
   const t=g.map(c=>({c,Pts:0,GF:0,GA:0})), f=k=>t.find(x=>x.c.key===k);
   for(let i=0;i<g.length;i++) for(let j=0;j<g.length;j++){ if(i===j) continue;
@@ -423,7 +479,7 @@ function playGroup(g,comp){
   t.sort((a,b)=>b.Pts-a.Pts||(b.GF-b.GA)-(a.GF-a.GA)||b.GF-a.GF||b.c.total-a.c.total);
   return t;
 }
-function drawGroups(cl,n,comp){
+function makeGroups(cl,n){
   const s=cl.slice().sort((a,b)=>b.total-a.total), pots=[];
   for(let p=0;p<s.length/n;p++) pots.push(shuffle(s.slice(p*n,(p+1)*n)));
   const G=Array.from({length:n},()=>[]);
@@ -431,8 +487,9 @@ function drawGroups(cl,n,comp){
     pot.forEach(c=>{ let k=av.findIndex(i=>G[i].length===pi&&!G[i].some(x=>x.co===c.co));
       if(k<0) k=av.findIndex(i=>G[i].length===pi);
       G[av[k]].push(c); av.splice(k,1) }) });
-  return G.map(g=>playGroup(g,comp));
+  return G;
 }
+const drawGroups=(cl,n,comp)=>makeGroups(cl,n).map(g=>playGroup(g,comp));
 
 
 /* ---------- seleção do torneio ---------- */
@@ -547,6 +604,23 @@ function qualifyOld(){
 }
 
 /* ---------- rendering ---------- */
+function groupRec(comp,groups){
+  const St=comp==="lib"?S.L:S.D;
+  St.gpos={}; const L="ABCDEFGH";
+  groups.forEach((g,gi)=>g.forEach((r,ri)=>{St.gpos[r.c.key]={g:L[gi],p:ri+1,pts:r.Pts}}));
+  const k=(S.bet||{})[comp];
+  if(!k||St.betOut) return;
+  const inIt=groups.some(g=>g.some(r=>r.c.key===k));
+  if(inIt && !groups.some(g=>g.slice(0,2).some(r=>r.c.key===k))) St.betOut=T("rGroupsShort");
+}
+function betCheck(comp,label,ties){
+  const St=comp==="lib"?S.L:S.D, k=(S.bet||{})[comp];
+  if(!k||St.betOut) return;
+  ties.forEach(t=>{ if(t.loser.key===k) St.betOut=label });
+}
+function pend(fn){ S.pend=S.pend||{};
+  if(!(step in S.pend)) S.pend[step]=fn();
+  return S.pend[step]; }
 const el=id=>document.getElementById(id);
 const colOf=k=>COL[k]||["#1A2430","#FFFFFF"];
 function chip(k){ const [a,b]=colOf(k);
@@ -557,7 +631,9 @@ function dot(x,y,k){ const [a,b]=colOf(k);
     +`<circle cx="${x}" cy="${y}" r="3.0" fill="none" stroke="rgba(26,36,48,.45)" stroke-width=".4"/>` }
 const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 const fl=co=>`<svg class="fl" viewBox="0 0 21 14" role="img" aria-label="${co}">${FLAG[co]}</svg>`;
-const nmR=c=>`${esc(c.name)}${fl(c.co)}`, nmL=c=>`${fl(c.co)}${esc(c.name)}`;
+const betMark=c=>(S.bet&&(S.bet.lib===c.key||S.bet.sud===c.key))?'<span class="star">★</span>':"";
+const clubLink=c=>`${betMark(c)}<span class="cl-link" data-club="${esc(c.key)}">${esc(c.name)}</span>`;
+const nmR=c=>`${clubLink(c)}${fl(c.co)}`, nmL=c=>`${fl(c.co)}${clubLink(c)}`;
 function goalLine(sa,sb){ const f=l=>l.map(g=>`${esc(g.name)} ${g.min}'`).join(", ");
   return (!sa.length&&!sb.length)?"":`<div class="gl"><span class="h">${f(sa)}</span><span></span><span>${f(sb)}</span></div>` }
 function oneHTML(t){ const wA=t.winner===t.a;
@@ -574,13 +650,13 @@ function tieHTML(t){ if(t.one) return oneHTML(t);
     ${goalLine(t.sc[0][0],t.sc[0][1])}
     <div class="leg"><span class="h">${nmR(t.b)}</span><span class="sc">${t.legs[1][0]}–${t.legs[1][1]}</span><span>${nmL(t.a)}</span></div>
     ${goalLine(t.sc[1][0],t.sc[1][1])}
-    <div class="agg"><span class="h ${wA?'win':'out'}">${esc(t.a.name)}</span><span class="sc">${t.agg[0]}–${t.agg[1]}</span><span class="${wA?'out':'win'}">${esc(t.b.name)}</span></div>
+    <div class="agg"><span class="h ${wA?'win':'out'}">${betMark(t.a)}${esc(t.a.name)}</span><span class="sc">${t.agg[0]}–${t.agg[1]}</span><span class="${wA?'out':'win'}">${betMark(t.b)}${esc(t.b.name)}</span></div>
     ${t.pens?`<p class="note">${esc(t.pens.name)} ${T("pens")}</p>`:""}</div>` }
 const tiesBlock=(t,ties,note)=>`<div class="block"><h3>${t}</h3>${ties.map(tieHTML).join("")}${note?`<p class="note">${note}</p>`:""}</div>`;
 function groupsBlock(t,gs){ const L="ABCDEFGH";
   return `<div class="block"><h3>${t}</h3><div class="groups">${gs.map((tb,i)=>
     `<div><h4>${T("group")} ${L[i]}</h4><table><tr><th>${T("club")}</th><th class="num">${T("pts")}</th><th class="num">${T("gd")}</th></tr>
-    ${tb.map((r,j)=>`<tr class="${j<2?'qual':''}"><td class="club">${fl(r.c.co)}${esc(r.c.name)}</td>
+    ${tb.map((r,j)=>`<tr class="${j<2?'qual':''}"><td class="club">${fl(r.c.co)}${clubLink(r.c)}</td>
       <td class="num">${r.Pts}</td><td class="num">${r.GF-r.GA>0?"+":""}${r.GF-r.GA}</td></tr>`).join("")}
     </table></div>`).join("")}</div></div>` }
 function scorerBlock(comp){
@@ -588,7 +664,7 @@ function scorerBlock(comp){
   if(!rows.length) return `<p class="empty">${T("emptyGoals")}</p>`;
   return `<div class="block"><h3>${T("scorers")}</h3><table><tr><th>${T("player")}</th><th>${T("club")}</th><th class="num">${T("goals")}</th></tr>
     ${rows.map((r,i)=>`<tr class="${i===0?'qual':''}"><td class="club">${esc(r.n)}</td>
-      <td class="club">${fl(r.co)}${esc(r.club)}</td><td class="num">${r.goals}</td></tr>`).join("")}</table></div>` }
+      <td class="club">${fl(r.co)}<span class="cl-link" data-club="${esc(r.co)}|${esc(r.club)}">${esc(r.club)}</span></td><td class="num">${r.goals}</td></tr>`).join("")}</table></div>` }
 const champBlock=n=>`<div class="champ"><p class="lbl">${T("champion")}</p><p class="who">${esc(n)}</p></div>`;
 
 const SPOT=[[50,137],[88,105],[69,119],[31,119],[12,105],[50,93],[26,79],[74,77],[87,45],[50,30],[13,45]];
@@ -648,19 +724,56 @@ function compPane(comp){
     ? blocks.map((b,i)=>`<button data-i="${i}" aria-selected="${i===S.tab[comp]}">${b.label}</button>`).join("")
       +`<button data-i="art" aria-selected="${S.tab[comp]==='art'}">${T("scorers")}</button>` : "";
   const t=S.tab[comp];
+  if(S.pvOn&&S.view===comp){ el("c-"+comp).innerHTML=S.pvHTML; el("s-"+comp).innerHTML=""; return }
   el("c-"+comp).innerHTML = !blocks.length ? `<p class="empty">${T("emptyComp")}</p>`
     : t==="art" ? scorerBlock(comp) : (blocks[t]||blocks[blocks.length-1]).html;
 }
+function betBar(){
+  const box=el("betbar");
+  if(!S.ALL||MODEBETDONE()){ box.innerHTML=""; return }
+  if(!S.bet){
+    const opts=comp=>{
+      const pool=comp==="lib"?(S.libDirect||[]).concat(S.libP2||[],S.libP1||[])
+                            :Object.values(S.sq||{}).flat();
+      return `<option value="">${T("betNone")}</option>`+pool.slice().sort((a,b)=>ptbr(a.name,b.name))
+        .map(c=>`<option value="${esc(c.key)}">${esc(c.name)} (${ABBR[c.co]})</option>`).join("");
+    };
+    box.innerHTML=`<span class="ask">${T("betAsk")}</span>
+      <label class="bl"><span>${T("betLib")}</span>
+        <select id="bl">${opts("lib")}</select></label>
+      <label class="bl"><span>${T("betSud")}</span>
+        <select id="bs">${opts("sud")}</select></label>
+      <button id="bgo">${T("betGo")}</button>
+      <button id="bskip" class="ghost">${T("betSkip")}</button>`;
+    el("bgo").onclick=()=>{ S.bet={lib:el("bl").value||null,sud:el("bs").value||null}; render() };
+    el("bskip").onclick=()=>{ S.bet={lib:null,sud:null}; render() };
+    return;
+  }
+  const one=(comp,St)=>{
+    const k=S.bet[comp]; if(!k) return "";
+    const c=S.ALL[k], champ=St.champ&&St.champ.key===k;
+    const st=champ?`<span class="ok">${T("betWon")}</span>`
+      :St.betOut?`<span class="ko">${T("betOut")} — ${St.betOut.toLowerCase()}</span>`
+      :`<span class="st">${T("betAlive")}</span>`;
+    return `<span><span class="star">★</span>${esc(c.name)} ${fl(c.co)} ${st}</span>`;
+  };
+  const l=one("lib",S.L), s=one("sud",S.D);
+  box.innerHTML=(l||s)?`<span class="ask">${T("betLabel")}</span>${l}${s}`:"";
+}
+const MODEBETDONE=()=>step>1&&!S.bet;
 function render(){
   const rr=R();
-  el("progline").textContent=step>=rr.length?"":(step+1)+"/"+rr.length+" · "+rr[step];
+  el("progline").textContent=step>=rr.length?"":(step+1)+"/"+rr.length+" · "+rr[step]
+    +(S.pvOn?" · "+T("pvTag"):"");
   el("prog").innerHTML=rr.map((r,i)=>
     `<li class="${i<step?'done':i===step?'now':''}"><b>${i+1}</b><span>${r}</span></li>`).join("");
   ["sq","tab","lib","sud"].forEach(k=>{
     el("t-"+k).setAttribute("aria-selected",S.view===k);
     el("p-"+k).classList.toggle("on",S.view===k) });
+  betBar();
   if(S.view==="sq") squadPane(); else if(S.view==="tab") tablePane(); else compPane(S.view);
-  el("next").textContent=step>=rr.length?T("done"):BTN()[step];
+  el("next").textContent=step>=rr.length?T("done")
+    :(S.slow?(S.pvOn?T("bSim"):(step>0?T("bPreview"):BTN()[step])):BTN()[step]);
   el("next").disabled=step>=rr.length; el("all").disabled=step>=rr.length;
 }
 const line=t=>`${t.a.name} ${t.agg[0]}-${t.agg[1]} ${t.b.name}`;
@@ -671,13 +784,57 @@ function reset(){
   MODE=el("mode").value;
   rnd=mulberry32(parseInt(el("seed").value||1,10)||1);
   step=0; log=[]; TALLY.lib={}; TALLY.sud={}; CLEAN.lib={}; CLEAN.sud={};
-  S.ALL=null; S.lq=null; S.sq=null; S.holders=null;
+  S.bet=null; S.pend=null; S.pvOn=false; S.pvHTML=null; S.ALL=null; S.lq=null; S.sq=null; S.holders=null;
   S.L={}; S.D={}; S.blocks={lib:[],sud:[]}; S.tab={lib:0,sud:0};
   S.view="sq"; S.co="Brazil"; S.club=null;
   render();
 }
+function previewFor(i){
+  const L=S.L, D=S.D;
+  const M=MODE==="modern", n=M?i:(i<=5?i:i);
+  const comp=(()=>{ const lbl=R()[i]||""; return lbl.indexOf("Sudamericana")===0?"sud":"lib" })();
+  let pairs=null, groups=null;
+  if(M){
+    if(i===1) pairs=pend(()=>pairSeed(S.libP1));
+    else if(i===2) pairs=pend(()=>pairSeed(S.libP2.concat(L.p1.map(t=>t.winner))));
+    else if(i===3) pairs=pend(()=>pairSeed(L.p2.map(t=>t.winner)));
+    else if(i===4) pairs=pend(sudPairs);
+    else if(i===5) groups=pend(()=>makeGroups(S.libDirect.concat(L.p3.map(t=>t.winner)),8));
+    else if(i===6) groups=pend(()=>makeGroups(sudField(L.drop,["Brazil","Argentina"]),8));
+    else if(i===7) pairs=pend(()=>{const t=shuffle(L.third); return t.map((x,k)=>[x,D.second[k]])});
+    else return koPreview(i-8);
+  } else {
+    if(i===1) pairs=pend(()=>pairSeed(S.libP1));
+    else if(i===2) pairs=pend(sudPairs);
+    else if(i===3) groups=pend(()=>makeGroups(S.libDirect.concat(L.p1.map(t=>t.winner)),8));
+    else if(i===4) groups=pend(()=>makeGroups(sudField(L.drop,["Brazil","Argentina","Mexico"]),8));
+    else if(i===5) pairs=pend(()=>{const t=shuffle(L.third); return t.map((x,k)=>[x,D.second[k]])});
+    else return koPreview(i-6);
+  }
+  return {comp,pairs,groups};
+}
+function koPreview(n){
+  const [rk,comp]=KO()[n], St=comp==="lib"?S.L:S.D;
+  if(rk==="rFinal") return {comp,pairs:pend(()=>[[St.sf[0].winner,St.sf[1].winner]])};
+  const key=KEYS[rk], prev={qf:"r16",sf:"qf"}[key];
+  return {comp,pairs:pend(()=>key==="r16"?pair16(St.win,St.sec):pairNext(St[prev]))};
+}
+function pvHTML(p){
+  if(p.groups){ const L="ABCDEFGH";
+    return `<div class="block"><h3>${T("pvTitle")}</h3><div class="groups">${p.groups.map((g,i)=>
+      `<div><h4>${T("group")} ${L[i]}</h4><table>${g.map(c=>
+        `<tr><td class="club">${fl(c.co)}${clubLink(c)}</td></tr>`).join("")}</table></div>`).join("")}</div></div>`; }
+  return `<div class="block"><h3>${T("pvTitle")}</h3>${p.pairs.map(x=>
+    `<div class="tie"><div class="agg"><span class="h">${nmR(x[0])}</span>
+      <span class="sc">×</span><span>${nmL(x[1])}</span></div></div>`).join("")}</div>`;
+}
 function advance(){
   const rr=R(); if(step>=rr.length) return;
+  if(S.slow&&step>0&&!S.pvOn){
+    const p=previewFor(step);
+    S.pvOn=true; S.pvHTML=pvHTML(p); S.view=p.comp; render(); return;
+  }
+  S.pvOn=false; S.pvHTML=null;
   const L=S.L, D=S.D;
   if(step===0){
     buildClubs(); MODE==="old"?qualifyOld():qualifyModern();
@@ -689,13 +846,13 @@ function advance(){
 }
 function modernStep(i,L,D){
   switch(i){
-  case 1: L.p1=bracket(S.libP1,"lib"); add("lib",T("rP1").charAt(0).toUpperCase()+T("rP1").slice(1),tiesBlock(T("rP1").charAt(0).toUpperCase()+T("rP1").slice(1),L.p1));
+  case 1: L.p1=playPairs(pend(()=>pairSeed(S.libP1)),"lib"); rec("lib",T("rP1"),L.p1); add("lib",T("rP1").charAt(0).toUpperCase()+T("rP1").slice(1),tiesBlock(T("rP1").charAt(0).toUpperCase()+T("rP1").slice(1),L.p1));
     S.view="lib"; log.push("LIBERTADORES — PRIMEIRA FASE\n"+L.p1.map(line).join("\n")); break;
-  case 2: L.p2=bracket(S.libP2.concat(L.p1.map(t=>t.winner)),"lib");
-    add("lib",T("rP2G"),tiesBlock(T("rP2G"),L.p2));
+  case 2: L.p2=playPairs(pend(()=>pairSeed(S.libP2.concat(L.p1.map(t=>t.winner)))),"lib");
+    rec("lib",T("rP2G"),L.p2); add("lib",T("rP2G"),tiesBlock(T("rP2G"),L.p2));
     S.view="lib"; log.push("LIBERTADORES — SEGUNDA FASE\n"+L.p2.map(line).join("\n")); break;
-  case 3: L.p3=bracket(L.p2.map(t=>t.winner),"lib"); L.drop=L.p3.map(t=>t.loser);
-    add("lib",T("rP3").charAt(0).toUpperCase()+T("rP3").slice(1),tiesBlock(T("rP3").charAt(0).toUpperCase()+T("rP3").slice(1),L.p3,T("dropNote")));
+  case 3: L.p3=playPairs(pend(()=>pairSeed(L.p2.map(t=>t.winner))),"lib"); L.drop=L.p3.map(t=>t.loser);
+    rec("lib",T("rP3"),L.p3); add("lib",T("rP3").charAt(0).toUpperCase()+T("rP3").slice(1),tiesBlock(T("rP3").charAt(0).toUpperCase()+T("rP3").slice(1),L.p3,T("dropNote")));
     S.view="lib"; log.push("LIBERTADORES — TERCEIRA FASE\n"+L.p3.map(line).join("\n")); break;
   case 4: sudFirst(D); break;
   case 5: libGroups(L,S.libDirect.concat(L.p3.map(t=>t.winner))); break;
@@ -705,8 +862,8 @@ function modernStep(i,L,D){
 }
 function oldStep(i,L,D){
   switch(i){
-  case 1: L.p1=bracket(S.libP1,"lib");
-    add("lib",T("rP1").charAt(0).toUpperCase()+T("rP1").slice(1),tiesBlock(T("rP1").charAt(0).toUpperCase()+T("rP1").slice(1),L.p1,
+  case 1: L.p1=playPairs(pend(()=>pairSeed(S.libP1)),"lib");
+    rec("lib",T("rP1"),L.p1); add("lib",T("rP1").charAt(0).toUpperCase()+T("rP1").slice(1),tiesBlock(T("rP1").charAt(0).toUpperCase()+T("rP1").slice(1),L.p1,
       T("dropNoteOld")));
     S.view="lib"; log.push("LIBERTADORES — PRIMEIRA FASE\n"+L.p1.map(line).join("\n"));
     L.drop=L.p1.map(t=>t.loser).sort((a,b)=>b.total-a.total).slice(0,4); break;
@@ -716,34 +873,42 @@ function oldStep(i,L,D){
   case 5: sudPlayoff(L,D); break;
   default: koStep(i-6); }
 }
-function sudFirst(D){
+function sudPairs(){
   const direct=MODE==="old"?["Brazil","Argentina","Mexico"]:["Brazil","Argentina"];
-  D.p1=[];
-  for(const co of Object.keys(S.sq)){ if(direct.includes(co)) continue;
-    D.p1.push(...pairAll(S.sq[co],"sud")) }
-  add("sud",T("rP1").charAt(0).toUpperCase()+T("rP1").slice(1),tiesBlock(T("natTitle"),D.p1,
+  const p=[];
+  for(const co of Object.keys(S.sq)){ if(direct.includes(co)) continue; p.push(...pairNat(S.sq[co])) }
+  return p;
+}
+function sudFirst(D){
+  D.p1=playPairs(pend(sudPairs),"sud");
+  rec("sud",T("rP1"),D.p1); add("sud",T("rP1").charAt(0).toUpperCase()+T("rP1").slice(1),tiesBlock(T("natTitle"),D.p1,
     T("natNote")));
   S.view="sud"; log.push("SUDAMERICANA — PRIMEIRA FASE\n"+D.p1.map(line).join("\n"));
 }
 function libGroups(L,field,label){
-  L.groups=drawGroups(field,8,"lib");
+  L.groups=pend(()=>makeGroups(field,8)).map(g=>playGroup(g,"lib"));
   L.third=L.groups.map(g=>g[2].c);
   L.win=L.groups.map(g=>g[0].c); L.sec=L.groups.map(g=>g[1].c);
+  groupRec("lib",L.groups);
   add("lib",label||T("rGroupsShort"),groupsBlock(label||T("rGroupsShort"),L.groups));
   S.view="lib"; log.push(glog("LIBERTADORES — GRUPOS",L.groups));
 }
+function sudField(drop,direct){
+  return direct.flatMap(co=>S.sq[co]||[]).concat(D0().p1.map(t=>t.winner)).concat(drop);
+}
+const D0=()=>S.D;
 function sudGroups(D,drop,direct){
-  const seeded=direct.flatMap(co=>S.sq[co]||[]);
-  D.groups=drawGroups(seeded.concat(D.p1.map(t=>t.winner)).concat(drop),8,"sud");
+  D.groups=pend(()=>makeGroups(sudField(drop,direct),8)).map(g=>playGroup(g,"sud"));
   D.win=D.groups.map(g=>g[0].c); D.second=D.groups.map(g=>g[1].c);
+  groupRec("sud",D.groups);
   add("sud",T("rGroupsShort"),groupsBlock(T("rGroupsShort"),D.groups));
   S.view="sud"; log.push(glog("SUDAMERICANA — GRUPOS",D.groups));
 }
 function sudPlayoff(L,D){
-  const t=shuffle(L.third); D.po=[];
-  for(let i=0;i<8;i++) D.po.push(tie(t[i],D.second[i],"sud"));
+  const pr=pend(()=>{const t=shuffle(L.third); return t.map((x,i)=>[x,D.second[i]])});
+  D.po=playPairs(pr,"sud");
   D.sec=D.po.map(x=>x.winner);
-  add("sud",T("rPO").charAt(0).toUpperCase()+T("rPO").slice(1),tiesBlock(T("poTitle"),D.po));
+  rec("sud",T("rPO"),D.po); add("sud",T("rPO").charAt(0).toUpperCase()+T("rPO").slice(1),tiesBlock(T("poTitle"),D.po));
   S.view="sud"; log.push("SUDAMERICANA — PLAYOFF\n"+D.po.map(line).join("\n"));
 }
 const KEYS={rR16:"r16",rQF:"qf",rSF:"sf"};
@@ -751,16 +916,35 @@ function koStep(n){
   const [rk,comp]=KO()[n], St=comp==="lib"?S.L:S.D, other=comp==="lib"?"Lib":"Sud";
   if(rk==="rFinal") return finalOne(comp,St);
   const key=KEYS[rk], prev={qf:"r16",sf:"qf"}[key];
-  St[key]=key==="r16"?bracket16(St.win,St.sec,comp):nextRound(St[prev],comp);
+  St[key]=playPairs(pend(()=>key==="r16"?pair16(St.win,St.sec):pairNext(St[prev])),comp);
+  rec(comp,T(rk),St[key]);
   add(comp,T(rk),tiesBlock(T(rk),St[key]));
   S.view=comp;
   log.push((comp==="lib"?"LIBERTADORES":"SUDAMERICANA")+" — "+T(rk).toUpperCase()+"\n"
     +St[key].map(line).join("\n"));
 }
 function finalOne(comp,St){
-  const f=(MODE==="modern"?oneOff:tie)(St.sf[0].winner,St.sf[1].winner,comp);
+  const fp=pend(()=>[[St.sf[0].winner,St.sf[1].winner]])[0];
+  const f=(MODE==="modern"?oneOff:tie)(fp[0],fp[1],comp);
+  rec(comp,T("rFinal"),[f]);
   const tal=TALLY[comp], cl=CLEAN[comp];
-  add(comp,T("rFinal"),tiesBlock(T("rFinal"),[f])+champBlock(f.winner.name)
+  const dom=byCo(f.winner.co).findIndex(c=>c.key===f.winner.key)+1;
+  const gp=(St.gpos||{})[f.winner.key];
+  const gline=gp?`<div class="r"><b>${T("rGroupsShort")}</b><span>${T("group")} ${gp.g}</span>
+    <span class="sc">${gp.p}º · ${gp.pts} ${T("pts")}</span></div>`:"";
+  const rest=(St.hist||[]).map(h=>{
+    const t=h.ties.find(x=>x.a.key===f.winner.key||x.b.key===f.winner.key);
+    if(!t) return "";
+    const home=t.a.key===f.winner.key, opp=home?t.b:t.a;
+    const sc=t.one?(home?t.leg[0]+"–"+t.leg[1]:t.leg[1]+"–"+t.leg[0])
+                  :(home?t.agg[0]+"–"+t.agg[1]:t.agg[1]+"–"+t.agg[0]);
+    return `<div class="r"><b>${h.label}</b><span>${fl(opp.co)}${esc(opp.name)}</span>
+      <span class="sc">${sc}${t.pens?" p":""}</span></div>`;
+  }).filter(Boolean).join("");
+  const path=gline+rest;
+  const extra=`<div class="block"><h3>${T("path")}</h3><div class="pathbox">${path}</div>
+    <p class="dompos">${dom}${T("domestic")} — ${CO(f.winner.co)}</p></div>`;
+  add(comp,T("rFinal"),tiesBlock(T("rFinal"),[f])+champBlock(f.winner.name)+extra
     +xiBlock(T("champXI"),f.winner.squad.map(p=>({...p,cs:(cl[f.winner.key]||{}).cs||0,
       g:(Object.values(tal).find(r=>r.n===p.n&&r.club===f.winner.name)||{}).goals||0})),
       esc(f.winner.name)+" · "+CO(f.winner.co),T("champXI"),f.winner.key));
@@ -770,14 +954,16 @@ function finalOne(comp,St){
   add(comp,T("selTab"),award(comp,qf,runs,T(comp==="lib"?"king":"prince"))
     +xiBlock(T("bestXI"),bestXI(comp,qf,"x").squad,T("selNote"),
       T("bestXI")+" — "+(comp==="lib"?"Libertadores":"Sudamericana")));
+  St.champ=f.winner;
   S.tab[comp]=S.blocks[comp].length-2; S.view=comp;
   log.push((comp==="lib"?"LIBERTADORES":"SUDAMERICANA")+" — "+T("rFinal").toUpperCase()+": "+f.winner.name);
 }
 el("next").onclick=advance;
-el("all").onclick=()=>{while(step<R().length) advance(); S.view="lib"; render()};
+el("all").onclick=()=>{const s=S.slow; S.slow=false; S.pvOn=false; while(step<R().length) advance(); S.slow=s; S.view="lib"; render()};
 el("reset").onclick=()=>{el("seed").value=String(1+Math.floor(Math.random()*999999)); reset()};
 el("seed").onchange=reset;
 el("mode").onchange=reset;
+el("slow").onchange=e=>{S.slow=e.target.checked; S.pvOn=false; render()};
 el("lang").onchange=()=>{
   const at=step, view=S.view, tabs={...S.tab}, co=S.co, club=S.club;
   LANG=el("lang").value; chrome();
@@ -790,8 +976,9 @@ function chrome(){
   el("lb-seed").textContent=T("seed"); el("lb-mode").textContent=T("format");
   el("lb-lang").textContent=T("lang");
   el("mode").options[0].textContent=T("fmodern"); el("mode").options[1].textContent=T("fold");
-  el("all").textContent=T("playAll"); el("reset").textContent=T("reset");
+  el("all").textContent=T("simAll"); el("reset").textContent=T("reset");
   el("dump").textContent=T("copy");
+  el("lb-slow").textContent=T("slow");
   el("t-sq").textContent=T("tSq"); el("t-tab").textContent=T("tTab");
   document.documentElement.lang=LANG==="es"?"es":"pt-BR";
   document.title=T("title");
@@ -799,6 +986,11 @@ function chrome(){
 ["sq","tab","lib","sud"].forEach(k=>el("t-"+k).onclick=()=>{S.view=k; render()});
 ["natrow","natrow2"].forEach(id=>el(id).onclick=e=>{
   const b=e.target.closest("button[data-co]"); if(b){S.co=b.dataset.co; S.club=null; render()}});
+["p-lib","p-sud"].forEach(p=>el(p).onclick=e=>{
+  const n=e.target.closest("[data-club]"); if(!n) return;
+  const k=n.dataset.club; if(!S.ALL[k]) return;
+  S.view="sq"; S.co=k.split("|")[0]; S.club=k; render();
+});
 el("clublist").onclick=e=>{const li=e.target.closest("li[data-k]"); if(li){S.club=li.dataset.k; render()}};
 ["lib","sud"].forEach(c=>el("s-"+c).onclick=e=>{
   const b=e.target.closest("button[data-i]"); if(!b) return;
