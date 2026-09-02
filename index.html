@@ -63,6 +63,9 @@ button:disabled{opacity:.35; cursor:default}
 .check{display:flex; align-items:center; gap:6px; font-size:14px; color:var(--muted);
   padding-bottom:6px; cursor:pointer}
 .check input{accent-color:var(--ink); width:15px; height:15px}
+.toggles{display:flex; gap:14px; flex-wrap:wrap; padding-bottom:5px}
+.check input:disabled+span{opacity:.45}
+#dump[hidden]{display:none}
 select{font-family:Vollkorn,serif; font-size:16px; padding:5px 7px; border:1px solid var(--rule);
   background:var(--panel); color:var(--ink); border-radius:0}
 .ltab{max-width:520px}
@@ -198,6 +201,7 @@ footer{margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
   .betbar .ask{font-size:15px; width:100%}
   .betbar select{max-width:none; flex:1 1 100%; font-size:16px}
   .betbar button{flex:1 1 auto}
+  .toggles{width:100%; gap:16px}
   .pathbox .r{grid-template-columns:84px 1fr auto; gap:7px; font-size:13px}
   .ltab{max-width:100%}
   footer{font-size:12px}
@@ -218,7 +222,10 @@ footer{margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
   <div><label for="seed" id="lb-seed">Seed</label><input type="number" id="seed" value="1960"></div>
   <button id="next">Sortear os elencos</button>
   <button id="all" class="ghost"></button>
-  <label class="check"><input type="checkbox" id="slow"> <span id="lb-slow"></span></label>
+  <span class="toggles">
+    <label class="check"><input type="checkbox" id="slow"> <span id="lb-slow"></span></label>
+    <label class="check"><input type="checkbox" id="beton"> <span id="lb-beton"></span></label>
+  </span>
   <button id="reset" class="ghost"></button>
   <button id="dump" class="ghost"></button>
   <div><label for="mode" id="lb-mode">Formato</label>
@@ -261,7 +268,7 @@ pt:{
  simAll:"Simular tudo de uma vez",
  betAsk:"Antes de começar: em quem tu apostas?",
  betLib:"Campeão da Libertadores", betSud:"Campeão da Sudamericana",
- slow:"ver confrontos antes", pvTitle:"Confrontos sorteados",
+ slow:"ver confrontos antes", betOn:"apostar num campeão", pvTitle:"Confrontos sorteados",
  bPreview:"Ver confrontos", bSim:"Simular resultados", pvTag:"prévia",
  betGo:"Apostar", betSkip:"Jogar sem apostar", betNone:"— escolher —",
  betLabel:"Palpite", betAlive:"na disputa", betOut:"eliminado",
@@ -303,7 +310,7 @@ es:{
  fmodern:"Actual (10 países)", fold:"Antiguo (con México)",
  playAll:"Jugar la temporada",
  simAll:"Simular todo de una vez",
- slow:"ver los cruces antes", pvTitle:"Cruces sorteados",
+ slow:"ver los cruces antes", betOn:"apostar por un campeón", pvTitle:"Cruces sorteados",
  bPreview:"Ver los cruces", bSim:"Simular los resultados", pvTag:"previa",
  betAsk:"Antes de empezar: ¿por quién apuestas?",
  betLib:"Campeón de la Libertadores", betSud:"Campeón de la Sudamericana",
@@ -730,8 +737,9 @@ function compPane(comp){
 }
 function betBar(){
   const box=el("betbar");
-  if(!S.ALL||MODEBETDONE()){ box.innerHTML=""; return }
+  if(!S.betOn||!S.ALL){ box.innerHTML=""; return }
   if(!S.bet){
+    if(step!==1){ box.innerHTML=""; return }
     const opts=comp=>{
       const pool=comp==="lib"?(S.libDirect||[]).concat(S.libP2||[],S.libP1||[])
                             :Object.values(S.sq||{}).flat();
@@ -743,10 +751,8 @@ function betBar(){
         <select id="bl">${opts("lib")}</select></label>
       <label class="bl"><span>${T("betSud")}</span>
         <select id="bs">${opts("sud")}</select></label>
-      <button id="bgo">${T("betGo")}</button>
-      <button id="bskip" class="ghost">${T("betSkip")}</button>`;
+      <button id="bgo">${T("betGo")}</button>`;
     el("bgo").onclick=()=>{ S.bet={lib:el("bl").value||null,sud:el("bs").value||null}; render() };
-    el("bskip").onclick=()=>{ S.bet={lib:null,sud:null}; render() };
     return;
   }
   const one=(comp,St)=>{
@@ -760,7 +766,6 @@ function betBar(){
   const l=one("lib",S.L), s=one("sud",S.D);
   box.innerHTML=(l||s)?`<span class="ask">${T("betLabel")}</span>${l}${s}`:"";
 }
-const MODEBETDONE=()=>step>1&&!S.bet;
 function render(){
   const rr=R();
   el("progline").textContent=step>=rr.length?"":(step+1)+"/"+rr.length+" · "+rr[step]
@@ -775,6 +780,7 @@ function render(){
   el("next").textContent=step>=rr.length?T("done")
     :(S.slow?(S.pvOn?T("bSim"):(step>0?T("bPreview"):BTN()[step])):BTN()[step]);
   el("next").disabled=step>=rr.length; el("all").disabled=step>=rr.length;
+  el("beton").disabled=step>1; el("dump").hidden=step===0;
 }
 const line=t=>`${t.a.name} ${t.agg[0]}-${t.agg[1]} ${t.b.name}`;
 function add(comp,label,html){ S.blocks[comp].push({label,html}); S.tab[comp]=S.blocks[comp].length-1 }
@@ -784,7 +790,7 @@ function reset(){
   MODE=el("mode").value;
   rnd=mulberry32(parseInt(el("seed").value||1,10)||1);
   step=0; log=[]; TALLY.lib={}; TALLY.sud={}; CLEAN.lib={}; CLEAN.sud={};
-  S.bet=null; S.pend=null; S.pvOn=false; S.pvHTML=null; S.ALL=null; S.lq=null; S.sq=null; S.holders=null;
+  S.bet=null; S.betOn=el("beton").checked; S.pend=null; S.pvOn=false; S.pvHTML=null; S.ALL=null; S.lq=null; S.sq=null; S.holders=null;
   S.L={}; S.D={}; S.blocks={lib:[],sud:[]}; S.tab={lib:0,sud:0};
   S.view="sq"; S.co="Brazil"; S.club=null;
   render();
@@ -964,6 +970,7 @@ el("reset").onclick=()=>{el("seed").value=String(1+Math.floor(Math.random()*9999
 el("seed").onchange=reset;
 el("mode").onchange=reset;
 el("slow").onchange=e=>{S.slow=e.target.checked; S.pvOn=false; render()};
+el("beton").onchange=e=>{S.betOn=e.target.checked; if(!S.betOn) S.bet=null; render()};
 el("lang").onchange=()=>{
   const at=step, view=S.view, tabs={...S.tab}, co=S.co, club=S.club;
   LANG=el("lang").value; chrome();
@@ -979,6 +986,7 @@ function chrome(){
   el("all").textContent=T("simAll"); el("reset").textContent=T("reset");
   el("dump").textContent=T("copy");
   el("lb-slow").textContent=T("slow");
+  el("lb-beton").textContent=T("betOn");
   el("t-sq").textContent=T("tSq"); el("t-tab").textContent=T("tTab");
   document.documentElement.lang=LANG==="es"?"es":"pt-BR";
   document.title=T("title");
