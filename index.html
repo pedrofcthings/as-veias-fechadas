@@ -733,7 +733,7 @@ function squadPane(){
     el("pitch").innerHTML=""; return }
   el("natrow").innerHTML=natrow();
   const list=alpha(S.co);
-  if(!list.some(c=>c.key===S.club)) S.club=list[0].key;
+  if(!list.some(c=>c.key===S.club)) S.club=byCo(S.co)[0].key;
   el("clublist").innerHTML=`<ul class="clublist">${list.map(c=>
     `<li data-k="${esc(c.key)}" aria-selected="${c.key===S.club}"><span>${chip(c.key)}${esc(c.name)}</span><b></b></li>`).join("")}</ul>`;
   const c=S.ALL[S.club];
@@ -825,7 +825,7 @@ function reset(){
   step=0; log=[]; TALLY.lib={}; TALLY.sud={}; CLEAN.lib={}; CLEAN.sud={};
   S.bet=null; S.betOn=el("beton").checked; S.pend=null; S.pvOn=false; S.pvHTML=null; S.ALL=null; S.lq=null; S.sq=null; S.holders=null;
   S.L={}; S.D={}; S.blocks={lib:[],sud:[]}; S.tab={lib:0,sud:0};
-  S.view="sq"; S.co="Brazil"; S.club=null;
+  S.view="sq"; S.co=(LANG==="es"?"Argentina":"Brazil"); S.club=null;
   render();
 }
 function previewFor(i){
