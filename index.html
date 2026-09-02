@@ -854,8 +854,7 @@ function advance(){
   const L=S.L, D=S.D;
   if(step===0){
     buildClubs(); MODE==="old"?qualifyOld():qualifyModern();
-    log.push(T("tSq").toUpperCase()+" "+T("orderNote")+"\n"
-      +COUNTRIES.map(co=>CO(co)+": "+byCo(co).map(c=>c.name).join(", ")).join("\n"));
+
     step++; render(); return;
   }
   if(MODE==="modern") modernStep(step,L,D); else oldStep(step,L,D);
