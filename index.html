@@ -973,8 +973,8 @@ const TOP10=["England","Italy","Spain","Germany","France","Netherlands","Portuga
 const AMRANK=["Brazil","Argentina","Uruguay","Colombia","Chile","Paraguay","Ecuador",
   "Peru","Mexico","Venezuela","Bolivia"];
 function qualAm(){
-  const q=Q.am, act=AMER.filter(c=>c!=="Mexico");
-  const need={Brazil:7,Argentina:6}, sn={Brazil:6,Argentina:6};
+  const q=Q.am, act=AMER;
+  const need={Brazil:6,Argentina:6}, sn={Brazil:5,Argentina:5,Mexico:2};
   const taken=new Set(); q.lq={};
   for(const co of act){ const l=byCo(co).slice(0,need[co]||4); q.lq[co]=l; l.forEach(c=>taken.add(c.key)) }
   const rest=act.flatMap(byCo).filter(c=>!taken.has(c.key)).sort((a,b)=>b.total-a.total);
@@ -984,8 +984,9 @@ function qualAm(){
     seen.add(c.co); q.holders.push(c); taken.add(c.key); if(q.holders.length===2) break }
   q.direct=q.holders.slice(); q.p2=[]; q.p1=[];
   for(const [co,l] of Object.entries(q.lq)) l.forEach((c,i)=>{ const s=i+1;
-    if(co==="Brazil"||co==="Argentina") (s<=5?q.direct:q.p2).push(c);
-    else if(co==="Chile"||co==="Colombia") (s<=2?q.direct:q.p2).push(c);
+    if(co==="Brazil") (s<=4?q.direct:q.p2).push(c);
+    else if(co==="Argentina") (s<=3?q.direct:q.p2).push(c);
+    else if(co==="Chile"||co==="Colombia"||co==="Mexico") (s<=2?q.direct:q.p2).push(c);
     else (s<=2?q.direct:(s===3?q.p2:q.p1)).push(c) });
   q.sq={};
   for(const co of act) q.sq[co]=byCo(co).filter(c=>!taken.has(c.key)).slice(0,sn[co]||4);
@@ -1014,7 +1015,26 @@ function qualOldC(k){                       /* champions-only: 32 clubs a side *
   q.sq={};
   for(const co of cos) q.sq[co]=byCo(co).filter(c=>!taken.has(c.key)).slice(0,n[co]);
 }
+/* Libertadores antiga: 12 na primeira fase (1 por país + 1 extra do país do
+   detentor), 26 diretos na segunda (BRA 4, ARG 4, demais 2), 8 grupos de 4. */
+function qualAmOld(){
+  const q=Q.am, act=AMER, nLib={Brazil:5,Argentina:5}, nSud={Brazil:8,Argentina:6};
+  const taken=new Set(); q.lq={};
+  for(const co of act){ const l=byCo(co).slice(0,nLib[co]||3); q.lq[co]=l;
+    l.forEach(c=>taken.add(c.key)) }
+  const holder=act.flatMap(byCo).sort((a,b)=>b.total-a.total)[0];
+  q.holders=[holder];
+  const extra=byCo(holder.co).filter(c=>!taken.has(c.key))[0];
+  if(extra) taken.add(extra.key);
+  q.direct=[]; q.p1=[]; q.p2=[];
+  for(const [co,l] of Object.entries(q.lq)){ const d=(co==="Brazil"||co==="Argentina")?4:2;
+    l.forEach((c,i)=>{ (i<d?q.direct:q.p1).push(c) }) }
+  if(extra) q.p1.push(extra);
+  q.sq={};
+  for(const co of act) q.sq[co]=byCo(co).filter(c=>!taken.has(c.key)).slice(0,nSud[co]||4);
+}
 const QUAL={am:qualAm,eu:qualEu};
+const QUALOLD={am:qualAmOld,eu:qualOldC};
 
 /* ---------- second-tier field, per continent ---------- */
 function sudPairsC(k){
@@ -1028,13 +1048,17 @@ function sudPairsC(k){
 function sudFieldC(k){
   const q=Q[k], B=S.C[CONTS[k].B];
   if(k==="am") return ["Brazil","Argentina"].flatMap(co=>q.sq[co]||[])
-    .concat(B.p1.map(t=>t.winner)).concat(S.C.lib.drop||[]);
+    .concat(B.p1.map(t=>t.winner)).concat(MODE==="old"?[]:(S.C.lib.drop||[]));
   return (q.bye||[]).concat(B.p1.map(t=>t.winner));
 }
 
 /* ---------- phases ---------- */
 const PH_MOD=["p1","p2","p3","sp1","lg","sg","spo","r16B","r16A","qfB","qfA","sfB","sfA","finB","finA"];
-const PH_OLD=["r32A","r32B","r16B","r16A","qfB","qfA","sfB","sfA","finB","finA"];
+const PH_OLD=["p1","sp1","r32A","lg","r32B","r16B","r16A","qfB","qfA","sfB","sfA","finB","finA"];
+/* no modo antigo a América joga preliminar + grupos e a Europa entra direto na
+   trigésima segunda, então nem toda fase se aplica aos dois continentes. */
+const PHK=(k,ph)=>MODE!=="old"?true
+  :(ph==="p1"||ph==="lg"||ph==="sp1")?k==="am":ph==="r32A"?k==="eu":true;
 const PHR={p1:"rP1",p2:"rP2",p3:"rP3",sp1:"rP1",lg:"rGroups",sg:"rGroups",spo:"rPO",
   r32A:"rR32",r32B:"rR32",r16A:"rR16",r16B:"rR16",qfA:"rQF",qfB:"rQF",
   sfA:"rSF",sfB:"rSF",finA:"rFinal",finB:"rFinal"};
@@ -1046,7 +1070,9 @@ function PHASES(){
   return p;
 }
 function koPairs(St,key,prev){
-  if(MODE==="old") return pairNat((key==="r16"?St.r32:St[prev]).map(t=>t.winner));
+  if(MODE==="old"){
+    if(key==="r16"&&!St.r32) return pair16(St.win,St.sec);
+    return pairNat((key==="r16"?St.r32:St[prev]).map(t=>t.winner)) }
   return key==="r16"?pair16(St.win,St.sec):pairNext(St[prev]);
 }
 function put(comp,lbl,ties,note){
@@ -1073,13 +1099,13 @@ function runPhase(k,ph){
   case "p3": A.p3=playPairs(pend(()=>pairSeed(A.p2.map(t=>t.winner))),C.A);
     A.drop=A.p3.map(t=>t.loser); put(C.A,CAP1(T("rP3")),A.p3,useB()?T("dropNote"):""); break;
   case "sp1": B.p1=playPairs(pend(()=>sudPairsC(k)),C.B); put(C.B,CAP1(T("rP1")),B.p1,T("natNote")); break;
-  case "lg": groupsPhase(C.A,q.direct.concat(A.p3.map(t=>t.winner))); break;
+  case "lg": groupsPhase(C.A,q.direct.concat((MODE==="old"?A.p1:A.p3).map(t=>t.winner))); break;
   case "sg": groupsPhase(C.B,sudFieldC(k)); break;
   case "spo": { const pr=pend(()=>{const t=shuffle(A.third); return t.map((x,i)=>[x,B.second[i]])});
     B.po=playPairs(pr,C.B); B.sec=B.po.map(x=>x.winner);
     put(C.B,CAP1(T("rPO")),B.po); break; }
   case "r32A": A.r32=playPairs(pend(()=>pairNat(q.direct)),C.A); put(C.A,T("rR32"),A.r32,T("oldNote")); break;
-  case "r32B": B.r32=playPairs(pend(()=>pairNat(Object.values(q.sq).flat())),C.B); put(C.B,T("rR32"),B.r32,T("oldNote")); break;
+  case "r32B": B.r32=playPairs(pend(()=>pairNat(MODE==="old"&&k==="am"?sudFieldC(k):Object.values(q.sq).flat())),C.B); put(C.B,T("rR32"),B.r32,T("oldNote")); break;
   default: {
     const key=ph.slice(0,-1), comp=C[ph.slice(-1)], St=S.C[comp];
     if(key==="fin"){ finalOne(comp,St); break }
@@ -1103,8 +1129,9 @@ function interMatch(kind){
 /* ---------- sequence ---------- */
 function ACTS(){
   const ks=ACT(), out=[{sp:"draw"}];
-  if(PARALLEL) for(const ph of PHASES()) out.push({ph,ks});
-  else for(const k of ks) for(const ph of PHASES()) out.push({ph,ks:[k]});
+  if(PARALLEL) for(const ph of PHASES()){ const kk=ks.filter(k=>PHK(k,ph));
+    if(kk.length) out.push({ph,ks:kk}) }
+  else for(const k of ks) for(const ph of PHASES()) if(PHK(k,ph)) out.push({ph,ks:[k]});
   if(ks.length===2){ if(useB()) out.push({sp:"rec"}); out.push({sp:"mun"}) }
   return out;
 }
@@ -1136,11 +1163,11 @@ function previewOne(a,k){
   case "p2": pairs=pend(()=>pairSeed(q.p2.concat(A.p1.map(t=>t.winner)))); break;
   case "p3": pairs=pend(()=>pairSeed(A.p2.map(t=>t.winner))); break;
   case "sp1": pairs=pend(()=>sudPairsC(k)); break;
-  case "lg": groups=pend(()=>makeGroups(q.direct.concat(A.p3.map(t=>t.winner)),8)); break;
+  case "lg": groups=pend(()=>makeGroups(q.direct.concat((MODE==="old"?A.p1:A.p3).map(t=>t.winner)),8)); break;
   case "sg": groups=pend(()=>makeGroups(sudFieldC(k),8)); break;
   case "spo": pairs=pend(()=>{const t=shuffle(A.third); return t.map((x,j)=>[x,B.second[j]])}); break;
   case "r32A": pairs=pend(()=>pairNat(q.direct)); break;
-  case "r32B": pairs=pend(()=>pairNat(Object.values(q.sq).flat())); break;
+  case "r32B": pairs=pend(()=>pairNat(MODE==="old"&&k==="am"?sudFieldC(k):Object.values(q.sq).flat())); break;
   default: { const key=a.ph.slice(0,-1), St=S.C[comp];
     if(key==="fin") pairs=pend(()=>[[St.sf[0].winner,St.sf[1].winner]]);
     else pairs=pend(()=>koPairs(St,key,{qf:"r16",sf:"qf"}[key])); }
@@ -1161,7 +1188,7 @@ function advance(){
      consumed in the same order whether or not the preview was shown. */
   if(!a.sp) previewFor(step);
   if(a.sp==="draw"){ buildClubs();
-    for(const k of ACT()) MODE==="old"?qualOldC(k):QUAL[k](); }
+    for(const k of ACT()) MODE==="old"?QUALOLD[k](k):QUAL[k](); }
   else if(a.sp) interMatch(a.sp);
   else for(const k of a.ks) runPhase(k,a.ph);
   step++; render();
