@@ -47,12 +47,13 @@
 .sheet b{font-weight:600}
 .sheetx{position:absolute; top:8px; right:11px; border:0; background:none; cursor:pointer;
   font-size:24px; line-height:1; color:var(--muted)}
-#helpbtn{font-weight:700; min-width:34px}
+#helpbtn{font-weight:700; min-width:34px; position:absolute; top:24px; right:24px}
+@media(max-width:640px){#helpbtn{top:14px; right:13px}}
 html,body{margin:0;padding:0}
 body{background:var(--paper); color:var(--ink);
   font-family:Vollkorn,Georgia,serif; font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased}
 h1,h2,h3,h4{font-family:"Sorts Mill Goudy",Georgia,serif; font-weight:400}
-.wrap{max-width:1120px; margin:0 auto; padding:30px 24px 80px}
+.wrap{max-width:1120px; margin:0 auto; padding:30px 24px 80px; position:relative}
 header{border-bottom:2px solid var(--ink); padding-bottom:13px}
 h1{font-size:33px; margin:0 0 2px}
 .sub{color:var(--ink); font-size:15.5px; margin:0 0 3px; max-width:64ch}
