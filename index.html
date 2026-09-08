@@ -53,7 +53,8 @@ body{background:var(--paper); color:var(--ink);
   font-family:Vollkorn,Georgia,serif; font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased}
 h1,h2,h3,h4{font-family:"Sorts Mill Goudy",Georgia,serif; font-weight:400}
 .wrap{max-width:1120px; margin:0 auto; padding:30px 24px 80px}
-header{border-bottom:2px solid var(--ink); padding-bottom:13px}
+header{border-bottom:2px solid var(--ink); padding-bottom:13px; position:relative}
+#helpbtn{position:absolute; top:2px; right:0; padding:4px 13px; line-height:1.2}
 h1{font-size:33px; margin:0 0 2px}
 .sub{color:var(--ink); font-size:15.5px; margin:0 0 3px; max-width:64ch}
 .sub2{color:var(--muted); font-size:14px; font-style:italic; margin:0}
@@ -208,7 +209,8 @@ footer{margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
 /* ---------- mobile ---------- */
 @media(max-width:640px){
   .wrap{padding:18px 13px 90px}
-  h1{font-size:25px} .sub{font-size:14px} .sub2{font-size:12.5px}
+  h1{font-size:25px; padding-right:42px} .sub{font-size:14px} .sub2{font-size:12.5px}
+  #helpbtn{font-size:15px; padding:3px 11px}
   .controls{gap:10px 12px; padding:11px 0 12px}
   .controls>div{flex:1 1 128px}
   input[type=number],select{width:100%; font-size:16px}
@@ -255,6 +257,7 @@ footer{margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
 
 <div class="wrap">
 <header>
+  <button id="helpbtn" class="ghost" aria-label="?">?</button>
   <h1 id="h-title">As Veias Fechadas</h1>
   <p class="sub" id="h-sub"></p>
   <p class="sub2" id="h-sub2"></p>
@@ -279,7 +282,6 @@ footer{margin-top:44px; padding-top:12px; border-top:1px solid var(--rule);
   <button id="reset" class="ghost"></button>
   <button id="link" class="ghost"></button>
   <button id="dump" class="ghost"></button>
-  <button id="helpbtn" class="ghost" aria-label="?">?</button>
 </div>
 <div id="helpmask" class="mask" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="helph">
   <button id="helpx" class="sheetx" aria-label="fechar">×</button>
